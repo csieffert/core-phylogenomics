@@ -24,11 +24,17 @@ die "Error: bam not defined" if (not defined $bam);
 die "Error: bam does not exist" if (not -e $bam);
 die "Error: no out-vcf defined" if (not defined $vcf);
 
-my $command = "$samtools mpileup -BQ0 -d10000000 -uf \"$reference\" \"$bam\" | $bcftools view -cg - > \"$vcf\"";
+my $command = "$samtools mpileup -BQ0 -d10000000 -I -uf \"$reference\" \"$bam\" | $bcftools view -cg - > \"$vcf\"";
 print "Running $command\n";
 system($command) == 0 or die "Could not run $command";
 
 die "Error: no output vcf file=$vcf produced" if (not -e $vcf);
+
+#fix issue where mpileup will produce empty key/value pair in INFO column with two ';;' in a row. It will cause bcftools to segmentation fault.
+$command = "sed -i 's/;;/;/g' $vcf";
+system($command) == 0 or die "Could not run $command";
+die "Error: Could not fix INFO column in mpileup vcf file=$vcf produced" if (not -e $vcf);
+
 $command = "$bgzip -f \"$vcf\"";
 print "Running $command\n";
 system($command) == 0 or die "Could not run $command";

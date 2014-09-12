@@ -23,7 +23,6 @@ use Stage::VariantCalling;
 use Stage::VcfPseudoalignment;
 use Stage::FastQC;
 use Stage::MappingFinal;
-use Stage::VcfCore;
 use Stage::MummerSNPS;
 use Stage::MummerMpileup;
 use Stage::CopyInputInvalid;
@@ -59,7 +58,6 @@ sub new
     $job_properties->set_dir('reference_dir', 'reference');
     $job_properties->set_dir('vcf_dir', 'vcf');
     $job_properties->set_dir('pseudoalign_dir', 'pseudoalign');
-    $job_properties->set_dir('vcf2core_dir', 'vcf2core');
     $job_properties->set_dir('vcf_split_dir', 'vcf-split');
     $job_properties->set_dir('fasta_dir', 'contig_dir');
     $job_properties->set_dir('invalid_pos_dir', 'invalid');
@@ -102,7 +100,6 @@ sub new_resubmit
     $job_properties->set_dir('reference_dir', 'reference');
     $job_properties->set_dir('vcf_dir', 'vcf');
     $job_properties->set_dir('pseudoalign_dir', 'pseudoalign');
-    $job_properties->set_dir('vcf2core_dir', 'vcf2core');
     $job_properties->set_dir('vcf_split_dir', 'vcf-split');
     $job_properties->set_dir('fasta_dir', 'contig_dir');
     $job_properties->set_dir('invalid_pos_dir', 'invalid');
@@ -172,7 +169,6 @@ sub _setup_stage_tables
 			  'mpileup',
 			  'variant-calling',
 			  'pseudoalign',
-	                  'vcf2core',
 	                  'build-phylogeny',
 	                  'phylogeny-graphic',
 			  'mapping-final'
@@ -187,12 +183,11 @@ sub _setup_stage_tables
 			    'mpileup',
 			    'variant-calling',
 			    'pseudoalign',
-                  	    'vcf2core',
 	                    'build-phylogeny',
 	                    'phylogeny-graphic',
 			];
 	
-	$stage->{'valid_job_dirs'} = ['pseudoalign_dir', 'vcf2core_dir', 'vcf_dir', 'vcf_split_dir', 'mpileup_dir', 'bam_dir', 'sam_dir', 'mapping_dir', 'reference_dir','job_dir','log_dir','align_dir','stage_dir','phylogeny_dir', 'fastq_dir','fasta_dir'];
+	$stage->{'valid_job_dirs'} = ['pseudoalign_dir',  'vcf_dir', 'vcf_split_dir', 'mpileup_dir', 'bam_dir', 'sam_dir', 'mapping_dir', 'reference_dir','job_dir','log_dir','align_dir','stage_dir','phylogeny_dir', 'fastq_dir','fasta_dir'];
 	#$stage->{'valid_other_files'} = ['input_fastq_dir'];
 	$stage->{'valid_other_files'} = [];
 
@@ -225,7 +220,6 @@ sub _initialize
 			'mummer-variant-calling' => new Stage::MummerSNPS($job_properties, $logger),
 			'mummer-align-calling' => new Stage::MummerMpileup($job_properties, $logger),
 			'pseudoalign' => new Stage::VcfPseudoalignment($job_properties, $logger),
-			'vcf2core' => new Stage::VcfCore($job_properties, $logger),
                         'build-phylogeny' => new Stage::BuildPhylogeny($job_properties, $logger),
                         'phylogeny-graphic' => new Stage::BuildPhylogenyGraphic($job_properties, $logger),
                         'mapping-final' => new Stage::MappingFinal($job_properties, $logger)

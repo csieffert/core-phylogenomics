@@ -5,41 +5,34 @@ use strict;
 
 use Getopt::Long;
 
-my ($samtools,$bcftools,$reference,$bam,$vcf,$bgzip,$tabix);
+my ($samtools,$bcftools,$reference,$bam,$bcf);
 GetOptions('s|samtools-path=s' => \$samtools,
 	   'b|bcftools-path=s' => \$bcftools,
 	   'r|reference=s' => \$reference,
 	   'bam=s' => \$bam,
-	   'out-vcf=s' => \$vcf,
-	   'bgzip-path=s' => \$bgzip,
-	   'tabix-path=s' => \$tabix);
+	   'out-bcf=s' => \$bcf);
 
 die "Error: no samtools path not defined" if (not defined $samtools);
 die "Error: no bcftools path defined" if (not defined $bcftools);
-die "Error: no bgzip path defined" if (not defined $bgzip);
-die "Error: no tabix path defined" if (not defined $tabix);
 die "Error: reference not defined" if (not defined $reference);
 die "Error: no reference exists" if (not -e $reference);
 die "Error: bam not defined" if (not defined $bam);
 die "Error: bam does not exist" if (not -e $bam);
-die "Error: no out-vcf defined" if (not defined $vcf);
+die "Error: no out-bcf defined" if (not defined $bcf);
 
-my $command = "$samtools mpileup -BQ0 -d10000000 -I -uf \"$reference\" \"$bam\" | $bcftools view -cg - > \"$vcf\"";
+
+#fix issue using sed  where mpileup will produce empty key/value pair in INFO column with two ';;' in a row. It will cause bcftools to segmentation fault.
+
+my $command = "$samtools mpileup -BQ0 -d100000 -I -uf \"$reference\" \"$bam\" | $bcftools call -c | sed 's/;;/;/g' | $bcftools view -O b -o \"$bcf\"";
 print "Running $command\n";
 system($command) == 0 or die "Could not run $command";
 
-die "Error: no output vcf file=$vcf produced" if (not -e $vcf);
+die "Error: no output bcf file=$bcf produced" if (not -e $bcf);
 
-#fix issue where mpileup will produce empty key/value pair in INFO column with two ';;' in a row. It will cause bcftools to segmentation fault.
-$command = "sed -i 's/;;/;/g' $vcf";
-system($command) == 0 or die "Could not run $command";
-die "Error: Could not fix INFO column in mpileup vcf file=$vcf produced" if (not -e $vcf);
 
-$command = "$bgzip -f \"$vcf\"";
-print "Running $command\n";
-system($command) == 0 or die "Could not run $command";
-$command = "$tabix -f -p vcf \"$vcf.gz\"";
+#create index file
+$command = "$bcftools index -f \"$bcf\"";
 print "Running $command\n";
 system($command) == 0 or die "Could not run $command";
 
-die "Error: no output bgzip/tabix vcf file=$vcf.gz produced" if (not -e "$vcf.gz");
+die "Error: no output bcf file=$bcf produced" if (not -e "$bcf");

@@ -49,10 +49,6 @@ sub execute
 	$samtools_path = "samtools" if ((not defined $samtools_path) or (not -e $samtools_path));
 	my $bcftools_path = $job_properties->get_file('bcftools');
 	$bcftools_path = "bcftools" if ((not defined $bcftools_path) or (not -e $bcftools_path));
-	my $bgzip_path = $job_properties->get_file('bgzip');
-	$bgzip_path = "bgzip" if ((not defined $bgzip_path) or (not -e $bgzip_path));
-	my $tabix_path = $job_properties->get_file('tabix');
-	$tabix_path = "tabix" if ((not defined $tabix_path) or (not -e $tabix_path));
 
 	opendir(my $bam_h,$bam_dir) or die "Could not open $bam_dir";
 	my @bam_files = grep {/\.bam$/i} readdir($bam_h);
@@ -67,11 +63,11 @@ sub execute
 		die "Could not find reference $reference_file" if (not -e $reference_file);
 		my $bam_file = "$bam_dir/$file";
 		my $vcf_name = basename($file, '.bam');
-		my $out_vcf = "$mpileup_dir/$vcf_name.vcf";
-		push(@mpileup_files,$out_vcf);
+		my $out_bcf = "$mpileup_dir/$vcf_name.bcf.gz";
+		push(@mpileup_files,$out_bcf);
 		push(@mpileup_params, ['--samtools-path', $samtools_path, '--bcftools-path', $bcftools_path,
-				      '--reference', $reference_file, '--bam', $bam_file, '--out-vcf', $out_vcf,
-				      '--bgzip-path', $bgzip_path, '--tabix-path', $tabix_path]);
+				      '--reference', $reference_file, '--bam', $bam_file, '--out-bcf', $out_bcf,
+				      ]);
 	}
 
 	$logger->log("\tSubmitting mpileup jobs for execution ...\n",1);
@@ -80,7 +76,7 @@ sub execute
 	# check to make sure everything ran properly
 	for my $file (@mpileup_files)
 	{
-		my $bgzip_file = "$file.gz";
+		my $bgzip_file = "$file";
 		$logger->log("\tchecking for $bgzip_file ...",1);
 		if (-e $bgzip_file)
 		{

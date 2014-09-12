@@ -11,26 +11,30 @@ my $filter_path = "$script_dir/filterVcf.pl";
 
 die "Error: no $filter_path exists" if (not -e $filter_path);
 
-my ($freebayes_params,$freebayes,$reference,$bam,$vcf,$bgzip,$tabix,$vcf_split,$min_coverage);
+my ($freebayes_params,$freebayes,$reference,$bam,$vcf,$bcftools,$bcf_split,$min_coverage);
+my ($bcf_header);
+
 GetOptions('f|freebayes-path=s' => \$freebayes,
 	   'r|reference=s' => \$reference,
 	   'bam=s' => \$bam,
 	   'out-vcf=s' => \$vcf,
-	   'out-vcf-split=s' => \$vcf_split,
+	   'out-bcf-split=s' => \$bcf_split,
+           'bcf_header=s' => \$bcf_header,
 	   'min-coverage=i' => \$min_coverage,
 	   'freebayes-params=s' => \$freebayes_params,
-	   'bgzip-path=s' => \$bgzip,
-	   'tabix-path=s' => \$tabix);
+	   'bcftools-path=s' => \$bcftools
+       );
 
 die "Error: no freebayes path defined" if (not defined $freebayes);
-die "Error: no bgzip path defined" if (not defined $bgzip);
-die "Error: no tabix path defined" if (not defined $tabix);
+die "Error: no bgzip path defined" if (not defined $bcftools);
 die "Error: reference not defined" if (not defined $reference);
 die "Error: no reference exists" if (not -e $reference);
 die "Error: bam not defined" if (not defined $bam);
 die "Error: bam does not exist" if (not -e $bam);
+die "Error: extract bcf header not defined" if (not defined $bcf_header);
 die "Error: no out-vcf defined" if (not defined $vcf);
-die "Error: no out-vcf-split defined" if (not defined $vcf_split);
+die "Error: no out-bcf-split defined" if (not defined $bcf_split);
+
 if (defined $freebayes_params)
 {
 	if ($freebayes_params =~ /--min-coverage/ or $freebayes_params =~ /-!/)
@@ -58,19 +62,21 @@ system($command) == 0 or die "Could not run $command";
 
 die "Error: no output vcf file=$vcf produced" if (not -e $vcf);
 
-$command = "$filter_path --noindels \"$vcf\" -o \"$vcf_split\"";
+#append the bcf contig header to the resuls from freebayes otherwise bcftools will fail since it NEEDS to have ##contig
+$command = "sed -i \"s/##fileformat=VCFv4.1/##fileformat=VCFv4.1\\n$bcf_header/\" \"$vcf\"";
+system($command) == 0 or die "Could not run $command";
+
+$command = "$filter_path --noindels \"$vcf\" | $bcftools view -O b -o \"$bcf_split\"";
 print "Running $command\n";
 system($command) == 0 or die "Could not run $command";
 
-die "Error: no split vcf file=$vcf_split produced" if (not -e $vcf_split);
+die "Error: no split bcf file=$bcf_split produced" if (not -e $bcf_split);
 
-my $vcf_bgzip = "$vcf_split.gz";
 
-$command = "$bgzip -f \"$vcf_split\"";
-print "Running $command\n";
-system($command) == 0 or die "Could not run $command";
-$command = "$tabix -f -p vcf \"$vcf_bgzip\"";
+#create index file
+$command = "$bcftools index -f \"$bcf_split\"";
 print "Running $command\n";
 system($command) == 0 or die "Could not run $command";
 
-die "Error: no output bgzip/tabix vcf file=$vcf_bgzip produced" if (not -e "$vcf_bgzip");
+
+die "Error: no output bcf file=$bcf_split produced" if (not -e "$bcf_split");

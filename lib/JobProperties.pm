@@ -122,8 +122,6 @@ sub _set_defaults
 	my $smalt = $defaults->{'path'}->{'smalt'};
 	my $samtools = $defaults->{'path'}->{'samtools'};
 	my $bcftools = $defaults->{'path'}->{'bcftools'};
-	my $bgzip = $defaults->{'path'}->{'bgzip'};
-	my $tabix = $defaults->{'path'}->{'tabix'};
 	my $freebayes = $defaults->{'path'}->{'freebayes'};
 	my $vcftools = $defaults->{'path'}->{'vcftools-lib'};
 	my $fastqc = $defaults->{'path'}->{'fastqc'};
@@ -178,8 +176,6 @@ sub _set_defaults
 	$self->set_file('smalt', $smalt) if ((defined $smalt) and (-e $smalt));
 	$self->set_file('samtools', $samtools) if ((defined $samtools) and (-e $samtools));
 	$self->set_file('bcftools', $bcftools) if ((defined $bcftools) and (-e $bcftools));
-	$self->set_file('bgzip', $bgzip) if ((defined $bgzip) and (-e $bgzip));
-	$self->set_file('tabix', $tabix) if ((defined $tabix) and (-e $tabix));
 	$self->set_file('freebayes', $freebayes) if ((defined $freebayes) and (-e $freebayes));
 	$self->set_file('vcftools-lib', $vcftools) if ((defined $vcftools) and (-e $vcftools));
 	$self->set_file('fastqc', $fastqc) if ((defined $fastqc) and (-e $fastqc));

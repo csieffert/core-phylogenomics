@@ -10,8 +10,6 @@ path:
 	smalt: /path/to/smalt
 	samtools: /path/to/samtools
 	bcftools: /path/to/bcftools
-	bgzip: /path/to/bgzip
-	tabix: /path/to/tabix
 	freebayes: /path/to/freebayes
 	vcftools-lib: /path/to/vcftools/perl
 	fastqc: /path/to/FastQC/fastqc

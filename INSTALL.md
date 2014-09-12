@@ -91,7 +91,6 @@ The module **Vcf** must be installed manually from http://vcftools.sourceforge.n
 * [PhyML](http://code.google.com/p/phyml/)
 * [GNU shuf](http://www.gnu.org/software/coreutils/manual/html_node/shuf-invocation.html)
 * [SMALT](http://www.sanger.ac.uk/resources/software/smalt/)
-* [Tabix](http://sourceforge.net/projects/samtools/files/tabix/)
 * [VCFtools](http://vcftools.sourceforge.net/)
 
 3. Dependency Check and Configuration
@@ -109,9 +108,7 @@ The script __scripts/check.pl__ can be used to automatically check for any of th
 	Checking for figtree ...OK
 	Checking for bcftools ...OK
 	Checking for shuf ...OK
-	Checking for bgzip ...OK
 	Checking for java ...OK
-	Checking for tabix ...OK
 	Checking for smalt ...OK
 	Checking for delta-filter ...OK
 	Checking for clustalw2 ...OK
@@ -143,8 +140,6 @@ An example of the __pipeline.conf__ file is:
 		smalt: /path/to/smalt
 		samtools: /path/to/samtools
 		bcftools: /path/to/bcftools
-		bgzip: /path/to/bgzip
-		tabix: /path/to/tabix
 		freebayes: /path/to/freebayes
 		vcftools-lib: /path/to/vcftools/perl
 		fastqc: /path/to/FastQC/fastqc

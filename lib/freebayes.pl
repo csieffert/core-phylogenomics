@@ -26,7 +26,7 @@ GetOptions('f|freebayes-path=s' => \$freebayes,
        );
 
 die "Error: no freebayes path defined" if (not defined $freebayes);
-die "Error: no bgzip path defined" if (not defined $bcftools);
+die "Error: no bcftools path defined" if (not defined $bcftools);
 die "Error: reference not defined" if (not defined $reference);
 die "Error: no reference exists" if (not -e $reference);
 die "Error: bam not defined" if (not defined $bam);

@@ -129,6 +129,7 @@ sub _set_defaults
 	my $shuf = $defaults->{'path'}->{'shuf'};
         my $vcf2pseudo_numcpus = $defaults->{'vcf2pseudo_numcpus'};
         my $vcf2core_numcpus = $defaults->{'vcf2core_numcpus'};
+	
 	my $nucmer = $defaults->{'path'}->{'nucmer'};
 	my $delta_filter = $defaults->{'path'}->{'delta-filter'};
 	my $show_aligns = $defaults->{'path'}->{'show-aligns'};

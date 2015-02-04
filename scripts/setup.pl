@@ -55,7 +55,7 @@ if (defined $help and $help)
         exit 0;
 }
 
-# reading example configuration file
+# reading example configuration file.
 my $yaml = YAML::Tiny->read($config_file);
 die "Error: coult not read $config_file" if (not defined $yaml);
 my $config = $yaml->[0];
@@ -64,7 +64,6 @@ print STDERR "Checking for Software dependencies...\n";
 
 my $paths = $config->{'path'};
 check_software($paths);
-
 
 if (not $force and -e $out_config_file)
 {

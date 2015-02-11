@@ -1,9 +1,11 @@
 #!/usr/bin/env perl
 
 package Stage::RearrangeSNPMatrix;
+
 use Stage;
 use Bio::Phylo::IO;
 use Bio::Phylo::Forest::Tree;
+use Text::CSV;
 @ISA = qw(Stage);
 
 use strict;
@@ -14,53 +16,97 @@ sub new
         my ($proto, $job_properties, $logger) = @_;
         my $class = ref($proto) || $proto;
         my $self = $class->SUPER::new($job_properties, $logger);
-
         bless($self,$class);
 
 	$self->{'_stage_name'} = 'rearrange-snp-matrix';
 
-        return $self;
+        return $self; 
 }
 
-#submodule to re-root the phylogenomic tree with the indicated strain.
+#Submodule to re-root the phylogenetic tree with the indicated strain.
+#Input: 
+#	$input_taxa_tree -> The phylogenetic tree to re-root
+#   $newRootStrain -> The strain to root 
 sub reRootTree
 {
 	my ($self, $input_taxa_tree, $newRootStrain) = @_;
-	
+	my $logger = $self->{'_logger'};
 	my $newRoot = "'".$newRootStrain."'";
-	foreach my $node ( @{ $input_taxa_tree->get_entities } ) {
+	foreach my $node ( @{ $input_taxa_tree->get_entities } ){ 
        if($node->get_name() eq $newRoot)
        {
-          $node->set_root_below();	
+          $input_taxa_tree->deroot();
+          $node->set_root_below();
+		  $logger->log("The phylogenetic tree has been successfully re-rooted on strain: ".$node->get_name()."\n", 0);
+		  return;	
        }
     }
-}
-
-#submodule to sort and display the phylogenomic tree in ascending order.
-sub sortAscending
-{
-	my ($self, $input_taxa_tree, $ref_name) = @_;
-}
-
-#submodule to sort and display the phylogenomic tree in descending order.
-sub sortDescending
-{
-	my ($self, $input_taxa_tree, $ref_name) = @_;
+    $logger->log("The requested strain".$newRoot."could not be found in the phylogenetic tree.\n", 0);
 }
 
 #submodule to rearrange the entries in matrix.csv to match the new phylogenetic ordering
-sub editMatrixCsv
+sub updateMatrixCsv
 {
-	my ($self, $input_taxa_tree, $ref_name) = @_;
+	my ($self, $input_taxa_tree) = @_;
+	#open a new file handle to print the output to
+	open(my $revisedMatrixCsv, '>revisedMatrix.csv') or die "Could not open the output file: $!";
+	
+	#open file handle for input matrix.csv file
+	my $inputMatrixFile = $self->{'_job_properties'}->get_property('inputMatrix');
+	open(my $data, '<', $inputMatrixFile) or die "Could not open '$inputMatrixFile' $!\n";
+	
+	my $csv = Text::CSV->new({ sep_char => '\t' });
+	#hash the two-dimensional matrix as 'keyColumn:keyRow' : 'value' pairs to facilitate rearrangement 
+	my %matrixHash = ();
+	my @strainColumn=[];
+	#parse the input matrix and retain the first row for strain names in @strainNames
+	while (my $input = <$data>) {
+		my @line = split(/\t/, $input);
+		#add all of the strain names for each row
+		if($line[0] eq 'strain'){
+			@strainColumn = split(/ /, "@line");
+		}
+		else{
+			my $strainRow = $line[0];
+			my $index = 0;
+			#hash the values in the matrix as 'keyColumn:keyRow' : 'value'
+			foreach(@line){
+				$matrixHash{"'".$strainColumn[$index]."'".':'."'".$strainRow."'"} = $_; 
+				$index++; 
+			}	
+		}
+	}
+			
+	#using reference tree, rearrange and output a new matrix.csv file
+	print $revisedMatrixCsv "strain\t";
+	foreach(@{ $input_taxa_tree->get_entities }){
+		if($_->is_terminal()){
+			print $revisedMatrixCsv $_->get_name()."\t";
+		}
+	}
+	print $revisedMatrixCsv "\n";
+	foreach( @{ $input_taxa_tree->get_entities } ) {
+		if($_->is_terminal()){
+    		my $rowNode = $_->get_name();
+    		print $revisedMatrixCsv $_->get_name()."\t";
+    		foreach( @{ $input_taxa_tree->get_entities } ) {
+    			if($_->is_terminal()){
+    				my $hashQuery = $rowNode.':'.$_->get_name();
+    				my $hashResult = $matrixHash{$hashQuery};
+    				print $revisedMatrixCsv $hashResult."\t";
+    			}
+    		}
+    		print $revisedMatrixCsv "\n";	      
+		}
+    }
+	close($revisedMatrixCsv);
+	close($data); 
 }
 
-#Parses the input pseudoalign.phy_phyml_tree.txt files into a tree of Bio::Phylo objects.
-#input: pseudoalign.phy_phyml_tree.txt file describing unsorted phylogeny.
-#output: Tree of Bio::Phylo objects describing the phylogeny.
-sub parseInput
+sub branchLengthToSNP
 {
-	my ($self, $input_phylogeny) = @_;
-	
+	my ($self, $input_taxa_tree) = @_;
+		
 }
 
 sub execute
@@ -68,7 +114,7 @@ sub execute
 	my ($self) = @_;
 	my $logger = $self->{'_logger'};
 	my $stage = $self->get_stage_name;
-
+	
 	my $job_properties = $self->{'_job_properties'};
 	my $taxa_file = $job_properties->get_property('input_taxa_dir');
 	$taxa_file .= '/pseudoalign.phy_phyml_tree.txt';
@@ -80,12 +126,22 @@ sub execute
     	'-file'   => $taxa_file,
     	'-format'   => 'newick'
  	)->first;
- 	 
- 	#reroot the tree if requested by user:
- 	$self->reRootTree($taxa, $job_properties->get_property('root_strain')) if exists $job_properties->get_property('root_strain');
  	
- 	open(my $taxaout, '>camoutput.txt') or die "Could not open output file: $!";
- 	print $taxaout $taxa->to_nexus( -header => 1, -links => 1 );
+ 	#reroot the tree if requested by user:
+ 	$self->reRootTree($taxa, $job_properties->get_property('root_strain')) if defined $job_properties->get_property('root_strain');
+ 	
+ 	#determine whether the tree should be re-sorted in decreasing or increasing order
+ 	if($job_properties->get_property('tree_order') eq "decreasing"){
+ 		$taxa->ladderize();
+ 	}
+ 	elsif($job_properties->get_property('tree_order') eq "increasing"){
+ 		$taxa->ladderize(1);
+ 	}
+ 	
+ 	#print the new phylogenetic tree to the output file.
+ 	open(my $taxaout, '>phylogeneticTree.txt') or die "Could not open output file: $!";
+ 	print $taxaout $taxa->to_newick( -header => 1, -links => 1 );
+ 	$self->updateMatrixCsv($taxa);
  	close($taxaout);
 }
 

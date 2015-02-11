@@ -1,4 +1,4 @@
-#!/bin/usr/env perl
+#!/usr/bin/env perl
 use warnings;
 use strict;
 
@@ -7,11 +7,11 @@ use lib $FindBin::Bin.'/../lib';
 use Test::More;
 use Test::Exception;
 use Stage::CopyInputFastq;
+use Stage::RearrangeSNPMatrix;
 use JobProperties;
 use Logger;
 use File::Temp 'tempdir';
 use Getopt::Long;
-use Stage::RearrangeSNPMatrix;
 
 my $tmp_dir;
 my $keep_tmp;
@@ -29,13 +29,13 @@ my $properties = JobProperties->new($tmp_dir);
 #set specific properties that would normally be set on command line or previous stages of the pipeline:
 $properties->set_property('input_taxa_dir', '/Warehouse/Users/csieffert/core-phylogenomics/t/data/tree/input');
 $properties->set_property('input_matrix_dir', '/Warehouse/Users/csieffert/core-phylogenomics/t/data/tree/input');
-$properties->set_property('root_strain', 'VC-15');
-$properties->set_property('tree_order', 'ascending');
+$properties->set_property('root_strain', 'VC-18');
+$properties->set_property('tree_order', 'increasing');
+$properties->set_property('inputMatrix', '/Course/MI_workshop_2014/day7/output-10-subsample-example/pseudoalign/matrix.csv');
 
 my $testObject = Stage::RearrangeSNPMatrix->new($properties, $logger);
 
 $testObject->execute();
-
 
 #a list of fake input fastq files that should throw an error with verify_unique_file_names
 #my @fastqFail = ['home/this.fastq', 'home/that.fastq', 'home/other.fastq'];

@@ -24,12 +24,12 @@ sub new
         return $self;
 }
 
-#Method to verify that all input fastq files and the reference fasta file have unique file names.
+#Verifies that all input fastq files and the reference fasta file have unique file names.
 #If duplicate names are found, die is called and an error message is logged/printed to STDERR.
 #input:
 #	$fastq_names: Array of Strings describing the URL for each input fastq file.
 #	$ref_name: URL of the input reference.fasta file.
-#output: returns 1 upon success
+#output: returns 1 upon success, die otherwise.
 sub verify_unique_file_names
 {
 	my ($self, $fastq_names, $ref_name) = @_;

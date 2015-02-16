@@ -6,7 +6,6 @@ use Stage;
 
 use strict;
 use warnings;
-
 use Report;
 use Report::Blast;
 

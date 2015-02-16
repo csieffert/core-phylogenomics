@@ -35,13 +35,13 @@ sub reRootTree
 	foreach my $node ( @{ $input_taxa_tree->get_entities } ){ 
        if($node->get_name() eq $newRoot)
        {
+       	  #TODO: Fix issue with rerooting the tree --> output tree is different from expected around the root.
           $input_taxa_tree->reroot($node);
           #$node->set_root_below();
 		  $logger->log("The phylogenetic tree has been successfully re-rooted on strain: ".$node->get_name()."\n", 0);
 		  return;	
        }
-    }
-        
+    }   
     $logger->log("The requested strain".$newRoot."could not be found in the phylogenetic tree.\n", 0);
 }
 
@@ -104,7 +104,6 @@ sub updateMatrixCsv
     		print $revisedMatrixCsv "\n";	      
 		}
     }
-    
 	close($revisedMatrixCsv);
 	close($data); 
 }

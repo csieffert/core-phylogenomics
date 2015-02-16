@@ -35,8 +35,7 @@ sub reRootTree
 	foreach my $node ( @{ $input_taxa_tree->get_entities } ){ 
        if($node->get_name() eq $newRoot)
        {
-       	  #$input_taxa_tree->deroot();
-          #$input_taxa_tree->reroot($node);
+          $input_taxa_tree->reroot($node);
           #$node->set_root_below();
 		  $logger->log("The phylogenetic tree has been successfully re-rooted on strain: ".$node->get_name()."\n", 0);
 		  return;	
@@ -194,6 +193,5 @@ sub execute
  	
  	close($taxaout);
 }
-
 
 

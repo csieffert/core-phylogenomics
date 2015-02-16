@@ -26,12 +26,14 @@ $keep_tmp = 0 if (not defined $keep_tmp);
 my $job_out = tempdir('rearrange_snp_matrixXXXXXX', CLEANUP => (not $keep_tmp), DIR => $tmp_dir) or die "Could not create temp directory";
 my $logger = Logger->new($job_out);
 my $properties = JobProperties->new($tmp_dir);
+
 #set specific properties that would normally be set on command line or previous stages of the pipeline:
 $properties->set_property('input_taxa_dir', '/Warehouse/Users/csieffert/core-phylogenomics/t/data/tree/input');
 $properties->set_property('input_matrix_dir', '/Warehouse/Users/csieffert/core-phylogenomics/t/data/tree/input');
 $properties->set_property('root_strain', 'VC-18');
 $properties->set_property('tree_order', 'increasing');
 $properties->set_property('inputMatrix', '/Course/MI_workshop_2014/day7/output-10-subsample-example/pseudoalign/matrix.csv');
+$properties->set_property('inputPhy', '/Course/MI_workshop_2014/day7/output-10-subsample-example/pseudoalign/pseudoalign.phy');
 
 my $testObject = Stage::RearrangeSNPMatrix->new($properties, $logger);
 

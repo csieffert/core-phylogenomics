@@ -36,8 +36,8 @@ sub reRootTree
        if($node->get_name() eq $newRoot)
        {
        	  #TODO: Fix issue with rerooting the tree --> output tree is different from expected around the root.
-          $input_taxa_tree->reroot($node);
-          #$node->set_root_below();
+          #$input_taxa_tree->reroot($node);
+          $node->set_root_below();
 		  $logger->log("The phylogenetic tree has been successfully re-rooted on strain: ".$node->get_name()."\n", 0);
 		  return;	
        }
@@ -82,7 +82,7 @@ sub updateMatrixCsv
 		}
 	}
 			
-	#using reference tree, print a new matrix.csv file to the indicated file handle
+	#using reference tree, print a re-ordered matrix.csv file to the indicated file handle
 	print $revisedMatrixCsv "strain\t";
 	foreach(@{ $input_taxa_tree->get_entities }){
 		if($_->is_terminal()){

@@ -31,7 +31,7 @@ my $properties = JobProperties->new($tmp_dir);
 $properties->set_property('input_taxa_dir', '/Warehouse/Users/csieffert/core-phylogenomics/t/data/tree/input');
 $properties->set_property('input_matrix_dir', '/Warehouse/Users/csieffert/core-phylogenomics/t/data/tree/input');
 $properties->set_property('root_strain', 'VC-18');
-$properties->set_property('tree_order', 'increasing');
+$properties->set_property('tree_order', 'decreasing');
 $properties->set_property('inputMatrix', '/Course/MI_workshop_2014/day7/output-10-subsample-example/pseudoalign/matrix.csv');
 $properties->set_property('inputPhy', '/Course/MI_workshop_2014/day7/output-10-subsample-example/pseudoalign/pseudoalign.phy');
 

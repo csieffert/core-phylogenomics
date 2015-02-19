@@ -5,7 +5,7 @@ use strict;
 use Test::More;
 use Test::Exception;
 
-system("perl ../scripts/rearrange_snp_matrix.pl -t . -k 1 -r VC-18 -s increasing -i data/tree/input -o data/tree -m /Course/MI_workshop_2014/day7/output-10-subsample-example/pseudoalign/matrix.csv -p /Course/MI_workshop_2014/day7/output-10-subsample-example/pseudoalign/pseudoalign.phy");
+system("perl ../scripts/rearrange_snp_matrix.pl -t data/tree/output -k 1 -r VC-18 -s increasing -i data/tree/input -o data/tree -m /Course/MI_workshop_2014/day7/output-10-subsample-example/pseudoalign/matrix.csv -p /Course/MI_workshop_2014/day7/output-10-subsample-example/pseudoalign/pseudoalign.phy");
 
 #==============================================================================
 #ADDING UNIT TESTS HERE IN THE NEAR FUTURE

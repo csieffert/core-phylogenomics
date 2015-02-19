@@ -21,6 +21,7 @@ use Logger;
 #Input: 
 #	$input_taxa_tree -> Bio::Phylo::Forest::Tree phylogenetic tree to re-root
 #   $newRootStrain -> String name of the strain to root with
+#	$logger->reference to the Logger object.
 #Output: 
 #	A modified phylogenetic tree, re-rooted on the $newRootStrain
 #=============================================================================
@@ -46,6 +47,8 @@ sub reRootTree
 #ordering.
 #Input: 
 #	$input_taxa_tree-> Bio::Phylo::Forest::Tree phylogenetic tree to re-root
+#	$inputMatrixFile-> The location of the input matrix.csv file.
+#	$logger->reference to the Logger object.
 #output: 
 #   New matrix.csv file that matches the ordering of the re-rooted phylo tree
 #==============================================================================
@@ -113,6 +116,8 @@ sub updateMatrixCsv
 #differences and renames the nodes to match the format: '[STRAIN][[BRANCH_LENGTH], [SNP_ESTIMATE]]' 
 #Input:
 #	$input_taxa_tree -> Bio::Phylo::Forest::Tree phylogenetic tree to re-root
+#	$inputPhyFile -> The location of the input pseudoalign.phy file.
+#	$logger->reference to the Logger object.
 #==============================================================================
 sub branchLengthToSNP
 {
@@ -147,6 +152,7 @@ sub branchLengthToSNP
 #Input:
 #	$input_taxa_tree -> Bio::Phylo::Forest::Tree phylogenetic tree to re-root
 #   $exponent -> the exponent to factor all branch lengths by
+#	$logger -> Reference to a Logger object.
 #Output:
 #	matrix.csv file with resized branch lengths.
 #==============================================================================
@@ -168,9 +174,9 @@ sub resizeTree
 
 #==============================================================================
 #Purpose:
-#	Script to re-root a phylogenomic tree, order the tree in increasing/
+#	Script to re-root a phylogenetic tree, order the tree in increasing/
 #	decreasing order, convert branch lengths to total SNP's, and output a 
-#	revised matrix.csv to match the phylogenomic tree.
+#	revised matrix.csv to match the phylogenetic tree.
 #==============================================================================
 
 my ($tmp_dir, $keep_tmp, $root_strain, $tree_order, $input_dir, $output_dir, $matrix_input, $input_phy, $help );
@@ -221,10 +227,12 @@ my $tree = Bio::Phylo::IO->parse(
 #determine whether the tree should be re-sorted in decreasing or increasing order
 if(defined $tree_order){
 	if($tree_order eq "decreasing"){
-		$tree->ladderize(1);
+		$tree->ladderize();
+		$logger->log("The tree has been successful sorted in decreasing order.");
 	}
 	elsif($tree_order eq "increasing"){
-		$tree->ladderize();
+		$tree->ladderize(1);
+		$logger->log("The tree has been successful sorted in increasing order.");
 	}
 }
 #create a matrix.csv file to reflect the changes made to the phylogenetic tree
@@ -233,13 +241,13 @@ updateMatrixCsv($tree, $matrix_input, $logger) if (defined $root_strain || defin
 branchLengthToSNP($tree, $input_phy, $logger);
  	
 #print the final newick formatted tree to a file that can be opened by any tree viewing program
-open(my $treeout, '>phylogenomicTree.txt') or die "Could not open output file: $!";
+open(my $treeout, '>phylogeneticTree.txt') or die "Could not open output file: $!";
 print $treeout $tree->to_newick( -nodelabels => 1, -header => 1, -links => 1 );
 close($treeout);
 
 =head1 NAME
 
-rearrange_snp_matrix.pl - Script to re-root a phylogenomic tree, order the tree in increasing/decreasing order, convert branch lengths to total SNP's, and output a revised matrix.csv to match the phylogenomic tree. 
+rearrange_snp_matrix.pl - Script to re-root a phylogenetic tree, order the tree in increasing/decreasing order, convert branch lengths to total SNP's, and output a revised matrix.csv to match the phylogenetic tree. 
 
 =head1 VERSION
 
@@ -295,8 +303,8 @@ To display help message
 
 rearrange_snp_matrix steps:
 
-1.  Takes a newick formatted phylogenomic tree file and reroots the tree on the strain indicated by --root.  The tree can then be sorted in increasing or decreasing order and branch lengths are converted and displayed as the total number of SNP's for each branch in the tree.  The new phylogenomic tree is output in newick format as a text file named phylogenomicTree.txt.
+1.  Takes a newick formatted phylogenetic tree file and reroots the tree on the strain indicated by --root.  The tree can then be sorted in increasing or decreasing order and branch lengths are converted and displayed as the total number of SNP's for each branch in the tree.  The new phylogenetic tree is output in newick format as a text file named phylogeneticTree.txt.
 
-2.  A new matrix.csv file is generated that matches the ordering of the phylogenomic tree done in step 1 above.
+2.  A new matrix.csv file is generated that matches the ordering of the phylogenetic tree done in step 1 above.
 
 =cut

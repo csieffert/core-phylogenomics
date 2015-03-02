@@ -31,7 +31,7 @@ my $testObject = Stage::CopyInputFastq->new($properties, $logger);
 
 #a list of fake input fastq files that should throw an error with verify_unique_file_names
 my @fastqFail = ['home/this.fastq', 'home/that.fastq', 'home/other.fastq'];
-dies_ok{$testObject->verify_unique_file_names(@fastqFail, 'home/this.fasta')} 'Duplicate file names are recognized and an error is thrown.'."\n";
+dies_ok{$testObject->verify_unique_file_names(@fastqFail, 'home/this.fasta')}, 'Duplicate file names are recognized and an error is thrown.'."\n";
 
 #test that should pass
 my @fastqPass = ['home/path/this.fastq', 'home/path/that.fastq', 'home/path/other.fastq'];

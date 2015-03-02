@@ -4,9 +4,10 @@ package Stage::VariantCalling;
 use Stage;
 use File::Basename;
 @ISA = qw(Stage);
-
+use Bio::SeqIO;
 use strict;
 use warnings;
+use File::Temp qw /tempfile/;
 
 sub new
 {
@@ -53,6 +54,8 @@ sub execute
 	my $reference_name = $job_properties->get_file('reference');
 	my $log_dir = $job_properties->get_dir('log_dir');
 	my $min_coverage = $job_properties->get_property('min_coverage');
+
+        
 	if (not defined $min_coverage)
         {
                 $min_coverage=5;
@@ -68,11 +71,11 @@ sub execute
 	my @freebayes_params;
 	my $freebayes_path = $job_properties->get_file('freebayes');
 	$freebayes_path = "freebayes" if ((not defined $freebayes_path) or (not -e $freebayes_path));
-	my $bgzip_path = $job_properties->get_file('bgzip');
-	$bgzip_path = "bgzip" if ((not defined $bgzip_path) or (not -e $bgzip_path));
-	my $tabix_path = $job_properties->get_file('tabix');
-	$tabix_path = "tabix" if ((not defined $tabix_path) or (not -e $tabix_path));
 
+	my $bcftools_path = $job_properties->get_file('bcftools');
+	$bcftools_path = "bcftools" if ((not defined $bcftools_path) or (not -e $bcftools_path));
+
+        
 	opendir(my $bam_h,$bam_dir) or die "Could not open $bam_dir";
 	my @bam_files = grep {/\.bam$/i} readdir($bam_h);
 	closedir($bam_h);
@@ -84,14 +87,16 @@ sub execute
 		my $file_base = basename($file, '.bam');
 		my $reference_file = "$reference_dir/$file_base.$reference_name";
 		die "Reference $reference_file does not exist" if (not -e $reference_file);
+                my $bcf_contig_string = create_contig_tags($reference_file);
 		my $bam_file = "$bam_dir/$file";
 		my $vcf_name = basename($file, '.bam');
 		my $out_vcf = "$vcf_dir/$vcf_name.vcf";
-		my $out_vcf_split = "$vcf_split_dir/$vcf_name.vcf";
-		push(@vcf_files,$out_vcf_split);
+		my $out_bcf_split = "$vcf_split_dir/$vcf_name.bcf.gz";
+		push(@vcf_files,$out_bcf_split);
 		push(@freebayes_params, ['--freebayes-path', $freebayes_path, '--reference', $reference_file,
 				      '--bam', $bam_file, '--out-vcf', $out_vcf,
-				      '--bgzip-path', $bgzip_path, '--tabix-path', $tabix_path, '--out-vcf-split', $out_vcf_split, '--min-coverage', $min_coverage, '--freebayes-params', $other_freebayes_params]);
+				      '--bcftools-path', $bcftools_path,'--out-bcf-split', $out_bcf_split, '--min-coverage', $min_coverage, '--freebayes-params', $other_freebayes_params,
+                                  '--bcf_header', $bcf_contig_string]);
 	}
 
 	$logger->log("\tSubmitting freebayes jobs for execution ...\n",1);
@@ -100,7 +105,7 @@ sub execute
 	# check to make sure everything ran properly
 	for my $file (@vcf_files)
 	{
-		my $bgzip_file = "$file.gz";
+		my $bgzip_file = "$file";
 		$logger->log("\tchecking for $bgzip_file ...",1);
 		if (-e $bgzip_file)
 		{
@@ -117,5 +122,21 @@ sub execute
 	$logger->log("done\n",1);
 	$logger->log("...done\n",0);
 }
+
+sub create_contig_tags {
+    my ($file) = @_;
+
+    my $in = Bio::SeqIO->new(-format=>'fasta',-file=>$file);
+
+    my @lines;
+    
+    while ( my $seq = $in->next_seq()) {
+        my $line=sprintf("##contig=<ID=%s,length=%d>",$seq->display_name(),$seq->length());
+        push @lines,$line;
+    }
+
+    return join('\n',@lines);
+}
+
 
 1;

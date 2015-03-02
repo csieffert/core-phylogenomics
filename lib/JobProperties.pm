@@ -122,14 +122,11 @@ sub _set_defaults
 	my $smalt = $defaults->{'path'}->{'smalt'};
 	my $samtools = $defaults->{'path'}->{'samtools'};
 	my $bcftools = $defaults->{'path'}->{'bcftools'};
-	my $bgzip = $defaults->{'path'}->{'bgzip'};
-	my $tabix = $defaults->{'path'}->{'tabix'};
 	my $freebayes = $defaults->{'path'}->{'freebayes'};
 	my $vcftools = $defaults->{'path'}->{'vcftools-lib'};
 	my $fastqc = $defaults->{'path'}->{'fastqc'};
 	my $java = $defaults->{'path'}->{'java'};
 	my $shuf = $defaults->{'path'}->{'shuf'};
-	
         my $vcf2pseudo_numcpus = $defaults->{'vcf2pseudo_numcpus'};
         my $vcf2core_numcpus = $defaults->{'vcf2core_numcpus'};
 	
@@ -140,7 +137,6 @@ sub _set_defaults
 	$self->set_property('drmaa_params',$drmaa_params) if (defined $drmaa_params);
         $self->set_property('vcf2pseudo_numcpus',$vcf2pseudo_numcpus) if (defined $vcf2pseudo_numcpus);
         $self->set_property('vcf2core_numcpus',$vcf2core_numcpus) if (defined $vcf2core_numcpus);
-        
 
 	if (defined $freebayes_params)
 	{
@@ -176,14 +172,21 @@ sub _set_defaults
 	$self->set_file('smalt', $smalt) if ((defined $smalt) and (-e $smalt));
 	$self->set_file('samtools', $samtools) if ((defined $samtools) and (-e $samtools));
 	$self->set_file('bcftools', $bcftools) if ((defined $bcftools) and (-e $bcftools));
-	$self->set_file('bgzip', $bgzip) if ((defined $bgzip) and (-e $bgzip));
-	$self->set_file('tabix', $tabix) if ((defined $tabix) and (-e $tabix));
 	$self->set_file('freebayes', $freebayes) if ((defined $freebayes) and (-e $freebayes));
 	$self->set_file('vcftools-lib', $vcftools) if ((defined $vcftools) and (-e $vcftools));
 	$self->set_file('fastqc', $fastqc) if ((defined $fastqc) and (-e $fastqc));
 	$self->set_file('java', $java) if ((defined $java) and (-e $java));
 	$self->set_file('shuf', $shuf) if ((defined $shuf) and (-e $shuf));
+<<<<<<< HEAD
 	
+=======
+	$self->set_file('nucmer', $nucmer) if ((defined $nucmer) and (-e $nucmer));
+	$self->set_file('delta-filter', $delta_filter) if ((defined $delta_filter) and (-e $delta_filter));
+	$self->set_file('show-aligns', $show_aligns) if ((defined $show_aligns) and (-e $show_aligns));
+	$self->set_file('show-snps', $show_snps) if ((defined $show_snps) and (-e $show_snps));
+	$self->set_file('mummer2vcf', $mummer2vcf) if ((defined $mummer2vcf) and (-e $mummer2vcf));
+
+>>>>>>> 87f4026e0e660a2d2f828e043d16fc02e495ad4d
 }
 
 sub set_property

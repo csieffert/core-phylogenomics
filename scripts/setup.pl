@@ -131,6 +131,22 @@ sub check_software
 		}
 	}
 
+<<<<<<< HEAD
+=======
+
+	print STDERR "Checking for mummer2Vcf ...";
+	my $binary_name = "mummer2Vcf.pl";
+	my $binary_path = "$script_dir/../lib/$binary_name";
+	if (not -e $binary_path)
+	{
+		die "error: $binary_name could not be found in $binary_path";
+	}
+	else
+	{
+		print STDERR "OK\n";
+		$paths->{$binary_name} = $binary_path;
+	}
+>>>>>>> 87f4026e0e660a2d2f828e043d16fc02e495ad4d
 
 	print STDERR "Checking for vcftools-lib ...";
 	my $vcftools_lib = $INC{'Vcf.pm'};

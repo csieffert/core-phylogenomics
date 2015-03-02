@@ -10,8 +10,6 @@ path:
 	smalt: /path/to/smalt
 	samtools: /path/to/samtools
 	bcftools: /path/to/bcftools
-	bgzip: /path/to/bgzip
-	tabix: /path/to/tabix
 	freebayes: /path/to/freebayes
 	vcftools-lib: /path/to/vcftools/perl
 	fastqc: /path/to/FastQC/fastqc
@@ -22,13 +20,11 @@ processors: 1
 
 min_coverage: 15
 max_coverage: 200
-freebayes_params: '--pvar 0 --ploidy 1 --left-align-indels --min-mapping-quality 30 --min-base-quality 30 --min-alternate-fraction 0.75'
+freebayes_params: '--pvar 0 --ploidy 1'
 smalt_index: '-k 13 -s 6'
 smalt_map: '-n 24 -f samsoft -r -1 -y 0.5'
 vcf2pseudo_numcpus: 1
-vcf2core_numcpus: 1
 trim_clean_params: '--numcpus 4 --min_quality 20 --bases_to_trim 10 --min_avg_quality 25 --min_length 36 -p 1'
-
 
 drmaa_params:
 	general: "-V"

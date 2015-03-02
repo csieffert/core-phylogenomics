@@ -12,14 +12,14 @@ sub main{
   my $settings={};
   GetOptions($settings,qw(help outfile=s indels! depth=i badsites=s));
   my @infile=@ARGV;
-  $$settings{outfile}||="$0.out.vcf";
+#  $$settings{outfile}||="$0.out.vcf";
   $$settings{depth}||=0;
   $$settings{indels}=1 if(!defined($$settings{indels}));
   die usage($settings) if($$settings{help} || !@infile);
 
   filterVcfs(\@infile,$settings);
 
-  print "VCF output is in $$settings{outfile}\n";
+
   return 0;
 }
 
@@ -27,10 +27,15 @@ sub filterVcfs{
   my($infile,$settings)=@_;
 
   my $newVcfStr="";
-  open(OUT,">",$$settings{outfile}) or die "Could not open $$settings{outfile} for writing:$!";
+  my $out = *STDOUT;
+  
+  if ( $$settings{outfile}) {
+      open($out,">",$$settings{outfile}) or die "Could not open $$settings{outfile} for writing:$!";
+  }
+
   $newVcfStr.=filterVcf($_,$settings) for(@$infile);
-  print OUT $newVcfStr;
-  close OUT;
+  print $out $newVcfStr;
+  close $out;
 }
 
 sub filterVcf{

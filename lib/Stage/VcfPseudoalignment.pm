@@ -62,6 +62,10 @@ sub execute
         my $num_cpus = $job_properties->get_property('vcf2pseudo_numcpus');
 	my $drmaa_params_string = $drmaa_params->{'vcf2pseudoalign'};
 	$drmaa_params_string = '' if (not defined $drmaa_params_string);
+
+	my $bcftools_path = $job_properties->get_file('bcftools');
+	$bcftools_path = "bcftools" if ((not defined $bcftools_path) or (not -e $bcftools_path));
+        
         
 	if (not defined $min_cov)
 	{
@@ -77,8 +81,8 @@ sub execute
 	$logger->log("\nStage: $stage\n",0);
 	$logger->log("Running vcf2pseudoalign ...\n",0);
 
-	my @pseudoalign_params = ['--vcf-dir', $vcf_split_dir, '--mpileup-dir', $mpileup_dir, '-o', $out_base,
-				  '-f', 'phylip', '-f', 'fasta', '-r', $reference_name, '-c', $min_cov, '-v','--numcpus',$num_cpus];
+	my @pseudoalign_params = ['--vcf-dir', $vcf_split_dir, '--mpileup-dir', $mpileup_dir, '-o', $out_base,'--bcftools',$bcftools_path,
+				  '-f', 'phylip', '-f', 'fasta', '-r', $reference_name, '-c', $min_cov, '-v','--numcpus',$num_cpus, '--fasta' , $reference_file];
 	
 	#check to see if we have an invalid position file
 	if ($invalid_file)

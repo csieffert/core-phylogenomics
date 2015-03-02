@@ -23,12 +23,7 @@ use Stage::VariantCalling;
 use Stage::VcfPseudoalignment;
 use Stage::FastQC;
 use Stage::MappingFinal;
-<<<<<<< HEAD
 use Stage::VcfCore;
-=======
-use Stage::MummerSNPS;
-use Stage::MummerMpileup;
->>>>>>> 87f4026e0e660a2d2f828e043d16fc02e495ad4d
 use Stage::CopyInputInvalid;
 use File::Basename qw(basename dirname);
 use File::Copy qw(copy move);

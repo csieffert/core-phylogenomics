@@ -177,16 +177,7 @@ sub _set_defaults
 	$self->set_file('fastqc', $fastqc) if ((defined $fastqc) and (-e $fastqc));
 	$self->set_file('java', $java) if ((defined $java) and (-e $java));
 	$self->set_file('shuf', $shuf) if ((defined $shuf) and (-e $shuf));
-<<<<<<< HEAD
-	
-=======
-	$self->set_file('nucmer', $nucmer) if ((defined $nucmer) and (-e $nucmer));
-	$self->set_file('delta-filter', $delta_filter) if ((defined $delta_filter) and (-e $delta_filter));
-	$self->set_file('show-aligns', $show_aligns) if ((defined $show_aligns) and (-e $show_aligns));
-	$self->set_file('show-snps', $show_snps) if ((defined $show_snps) and (-e $show_snps));
-	$self->set_file('mummer2vcf', $mummer2vcf) if ((defined $mummer2vcf) and (-e $mummer2vcf));
 
->>>>>>> 87f4026e0e660a2d2f828e043d16fc02e495ad4d
 }
 
 sub set_property

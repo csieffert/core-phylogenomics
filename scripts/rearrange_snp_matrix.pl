@@ -12,30 +12,34 @@ use Pod::Usage;
 use Getopt::Long;
 use File::Temp 'tempdir';
 use Pod::Usage;
+use Math::Round;
+use Logger;
 
 #=============================================================================
 #Purpose:
-#    Re-roots the phylogenetic tree with the indicated strain.
+#	Re-roots the phylogenetic tree with the indicated strain.
 #
 #Input: 
-#    $input_taxa_tree -> Bio::Phylo::Forest::Tree phylogenetic tree to re-root
-#    $newRootStrain -> String name of the strain to root with
-#    $logger->reference to the Logger object.
+#	$input_taxa_tree -> Bio::Phylo::Forest::Tree phylogenetic tree to re-root
+#   $newRootStrain -> String name of the strain to root with
+#	$logger->reference to the Logger object.
 #Output: 
-#    A modified phylogenetic tree, re-rooted on the $newRootStrain
+#	A modified phylogenetic tree, re-rooted on the $newRootStrain
 #=============================================================================
 sub reRootTree
 {
-    my ($input_taxa_tree, $newRootStrain) = @_;
+	my ($input_taxa_tree, $newRootStrain, $logger) = @_;
 
-    my $newRoot = "'".$newRootStrain."'";
-    foreach my $node ($input_taxa_tree->get_nodes()){ 
-        if($node->id eq $newRoot)
-        {
-       	$input_taxa_tree->reroot_at_midpoint($node, 'ROOT NODE');
-		return;	
+	my $newRoot = "'".$newRootStrain."'";
+	foreach my $node ($input_taxa_tree->get_nodes()){ 
+       if($node->id eq $newRoot)
+       {
+       	  $input_taxa_tree->reroot_at_midpoint($node, 'ROOT NODE');
+		  $logger->log("The phylogenetic tree has been successfully re-rooted on strain: ".$node->id()."\n", 0);
+		  return;	
        }
     }   
+    $logger->log("The requested strain".$newRoot."could not be found in the phylogenetic tree.\n", 0);
 }
 
 #==============================================================================
@@ -51,10 +55,10 @@ sub reRootTree
 #==============================================================================
 sub updateMatrixCsv
 {
-	my ($input_taxa_tree, $inputMatrixFile) = @_;
+	my ($input_taxa_tree, $inputMatrixFile, $output_dir, $logger) = @_;
 	
 	#open a new file handle to print the output to
-	open(my $revisedMatrixCsv, '>revisedMatrix.csv') or die "ERROR: Could not open the output file: $!";
+	open(my $revisedMatrixCsv, '>'.$output_dir.'/revisedMatrix.csv') or die "ERROR: Could not open the output file: $!";
 	
 	#open file handle for input matrix.csv file
 	open(my $data, '<', $inputMatrixFile) or die "ERROR: Could not open '$inputMatrixFile' $!\n";
@@ -110,7 +114,7 @@ sub updateMatrixCsv
 #==============================================================================
 #Purpose:
 #	Converts the branch lengths to an estimate of the total number of SNP 
-#differences and renames the nodes to match the format: '[STRAIN][[BRANCH_LENGTH], [SNP_ESTIMATE]]' 
+#differences 
 #Input:
 #	$input_taxa_tree -> Bio::Phylo::Forest::Tree phylogenetic tree to re-root
 #	$inputPhyFile -> The location of the input pseudoalign.phy file.
@@ -118,7 +122,7 @@ sub updateMatrixCsv
 #==============================================================================
 sub branchLengthToSNP
 {
-	my ($input_taxa_tree, $inputPhyFile) = @_;
+	my ($input_taxa_tree, $inputPhyFile, $logger) = @_;
 		
 	#parse the total SNP's in the tree from the input .phy file:
 	open(my $inputPhy, "<", $inputPhyFile) or die "ERROR: Could not open input phylogeny.phy file.";
@@ -139,12 +143,14 @@ sub branchLengthToSNP
       	$node->branch_length(0);
       }
       else{
-      	$node->branch_length($lengthToSNP);
+      	#round the number printed to the closest integer value
+      	$node->branch_length(round($lengthToSNP));
       }
       print $node->id() if $node->is_Leaf;
       $internalNumber++ if !$node->is_Leaf;
     }
     close($inputPhy);
+    $logger->log("Branch lengths have been successfully converted to total SNP's\n", 0);
 }
 
 #==============================================================================
@@ -160,7 +166,7 @@ sub branchLengthToSNP
 #==============================================================================
 sub resizeTree
 {
-	my ($input_taxa_tree, $exponent) = @_;
+	my ($input_taxa_tree, $exponent, $logger) = @_;
 	
 	my $minimumBranchLength = 0.009;
 	#zero out the branch values that are lower than threshold to maintain tree structure for near 0 branch lengths:
@@ -171,6 +177,7 @@ sub resizeTree
 	}
 	
 	$input_taxa_tree->exponentiate($exponent);
+	$logger->log("Branch lengths have been resized with an exponential factor of: ".$exponent."\n", 0);
 }
 
 #==============================================================================
@@ -180,14 +187,15 @@ sub resizeTree
 #	revised matrix.csv to match the phylogenetic tree.
 #==============================================================================
 
-my ($tmp_dir, $keep_tmp, $root_strain, $tree_order, $input_dir, $output_dir, $matrix_input, $input_phy, $help );
+my ($tmp_dir, $keep_tmp, $convert, $root_strain, $tree_order, $input_tree, $output_dir, $matrix_input, $input_phy, $help );
 
 GetOptions(
 	't|tmp-dir=s' => \$tmp_dir,
 	'k|keep_tmp=s' => \$keep_tmp,
+	'c|convert' => \$convert,
 	'r|root=s' => \$root_strain,
 	's|sort=s' => \$tree_order,
-	'i|inputdir=s' => \$input_dir,
+	'i|inputtree=s' => \$input_tree,
 	'o|outdir=s' => \$output_dir,
 	'm|matrix=s' => \$matrix_input,
 	'p|phy=s' =>	\$input_phy,
@@ -199,15 +207,17 @@ if ($help){
 				-sections => "SYNOPSIS|OPTIONS|DESCRIPTION");
 }
 
+pod2usage(1) unless $tmp_dir && $input_tree && $output_dir && $matrix_input && $input_phy;
+
 #check to ensure all required command line variables are present and set default values if applicable:
-pod2usage(1) unless $tmp_dir && $input_dir && $output_dir && $matrix_input && $input_phy;
 die "Error: No temp directory defined." if (not defined $tmp_dir);
 $keep_tmp = 0 if (not defined $keep_tmp);
 
-my $job_out = tempdir('rearrange_snp_matrixTempXXXX', CLEANUP => (not $keep_tmp), DIR => $tmp_dir) or die "Could not create temp directory";
+my $job_out = tempdir('rearrange_snp_matrixXXXXXX', CLEANUP => (not $keep_tmp), DIR => $tmp_dir) or die "Could not create temp directory";
+my $logger = Logger->new($job_out);
 	
 #parse the newick format phylogeny generated by phyml into a Bio::Phylo::Forest::Tree object
-my $taxa_file = $input_dir.'/pseudoalign.phy_phyml_tree.txt';
+my $taxa_file = $input_tree;
 my $taxaIO = Bio::TreeIO->new(
 	'-format'   => 'newick',
    	'-file'   => $taxa_file
@@ -215,7 +225,7 @@ my $taxaIO = Bio::TreeIO->new(
 my $taxa = $taxaIO->next_tree;
  	
 #reroot the tree if requested by user:
-reRootTree($taxa, $root_strain) if defined $root_strain;
+reRootTree($taxa, $root_strain, $logger) if defined $root_strain;
  	
 #parse the Bio::Tree::Tree object into a Bio::Phylo::Forest::Tree object to facilitate reordering
 my $tree = Bio::Phylo::IO->parse(
@@ -227,22 +237,22 @@ my $tree = Bio::Phylo::IO->parse(
 if(defined $tree_order){
 	if($tree_order eq "decreasing"){
 		$tree->ladderize();
+		$logger->log("The tree has been successfully sorted in decreasing order.\n");
 	}
 	elsif($tree_order eq "increasing"){
 		$tree->ladderize(1);
+		$logger->log("The tree has been successfully sorted in increasing order.\n");
 	}
 }
 #create a matrix.csv file to reflect the changes made to the phylogenetic tree
-#updateMatrixCsv($tree, $matrix_input, $logger) if (defined $root_strain || defined $tree_order);
-#add the branch length to SNP labels to the tree nodes that show as: STRAIN[BRANCH_LENGTH, TOTAL_SNP's]
-branchLengthToSNP($tree, $input_phy);
+updateMatrixCsv($tree, $matrix_input, $output_dir, $logger) if (defined $root_strain || defined $tree_order);
+#convert branch lengths to total SNP estimate
+branchLengthToSNP($tree, $input_phy, $logger) if defined $convert;
  	
 #print the final newick formatted tree to a file that can be opened by any tree viewing program
-open(my $treeout, '>phylogeneticTree.txt') or die "Could not open output file: $!";
+open(my $treeout, '>'.$output_dir.'/phylogeneticTree.txt') or die "Could not open output file: $!";
 print $treeout $tree->to_newick( -nodelabels => 1, -header => 1, -links => 1 );
 close($treeout);
-
-1;
 
 =head1 NAME
 
@@ -254,7 +264,7 @@ This documentation refers to rearrange_snp_matrix.pl version 0.0.1.
 
 =head1 SYNOPSIS
 
- rearrange_snp_matrix.pl -t tempDir -k keepTemp -r rootStrain -s sortOrder -i inputDataDirectory -o outputDir -m matrix.csv_input -p pseudoalign.phy_input
+ rearrange_snp_matrix.pl -t tempDir -k keepTemp -c convertToSNP -r rootStrain -s sortOrder -i inputTree -o outputDir -m matrix.csv_input -p pseudoalign.phy_input
 
 =head1 OPTIONS
 
@@ -268,6 +278,10 @@ The directory location of the temporary directory where log messages are sent.
 
 Boolean flag indicating whether to keep or delete the temporary directory upon exiting the script.
 
+=item B<-c>, B<--convert> [optional]
+
+Boolean flag indicating whether to convert the branch lengths to an estimate of the total SNP number.
+
 =item B<-r>, B<--root> [optional] 
 
 The output file.
@@ -276,9 +290,9 @@ The output file.
 
 Flag, 'increasing' or 'decreasing', indicating the order in which to sort nodes in the output phylogenetic tree.
 
-=item B<-i>, B<--inputDir> [required]
+=item B<-i>, B<--inputtree> [required]
 
-Directory containing the output files from phyml.
+Newick file of the phylogenetic tree.
 
 =item B<-o>, B<--outDir> [required]
 

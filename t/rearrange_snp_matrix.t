@@ -6,7 +6,7 @@ use Test::More;
 use Test::Exception;
 use File::Compare;
 
-
+my $command;
 #==============================================================================
 #UNIT TESTS
 #=======VALID INPUT FUNCTIONALITY TESTS=============
@@ -37,8 +37,16 @@ system("perl ../scripts/rearrange_snp_matrix.pl -t data/tree/output/6 -r VC-18 -
 ok((compare('data/tree/output/6/phylogeneticTree.txt', 'data/tree/expected/6/phylogeneticTree.txt')==0), "Verify that the phylogenetic tree has its branch lengths converted to total SNP estimates.");
 
 #=========INVALID INPUT ERROR HANDLING TESTS=========
-#7 => verify that the script dies properly when an invalid phylogenetic tree is input
-#dies_ok(sub{system("perl ../scripts/rearrange_snp_matrix.pl -t data/tree/output/7 -r VC-18 -s increasing -i data/tree/input/INVALIDpseudoalign.phy_phyml_tree.txt -o data/tree/output/7 -m data/tree/input/matrix.csv -p data/tree/input/pseudoalign.phy")}, "Invalid newick files are not accepted.");
+#7 => verify that the script dies properly when an invalid phylogenetic tree
+$command = "perl ../scripts/rearrange_snp_matrix.pl -t data/tree/output/7 -r VC-18 -s increasing -i data/tree/input/INVALIDpseudoalign.phy_phyml_tree.txt -o data/tree/output/7 -m data/tree/input/matrix.csv -p data/tree/input/pseudoalign.phy";
+ok(system(`$command`)!=0, "Invalid newick files are not accepted.");
 
+#8 => verify that the script dies properly when an invalid matrix.csv file is input
+$command = "perl ../scripts/rearrange_snp_matrix.pl -t data/tree/output/7 -r VC-18 -s increasing -i data/tree/input/pseudoalign.phy_phyml_tree.txt -o data/tree/output/7 -m data/tree/input/INVALIDmatrix.csv -p data/tree/input/pseudoalign.phy";
+ok(system(`$command`)!=0, "Invalid newick files are not accepted.");
+
+#9 => verify that the script dies properly when an invalid pseudoalign.phy file is input
+$command = "perl ../scripts/rearrange_snp_matrix.pl -t data/tree/output/7 -r VC-18 -s increasing -i data/tree/input/pseudoalign.phy_phyml_tree.txt -o data/tree/output/7 -m data/tree/input/matrix.csv -p data/tree/input/INVALIDpseudoalign.phy";
+ok(system(`$command`)!=0, "Invalid pseudoalign.phy files are not accepted.");
 #=============================================================================
 done_testing();

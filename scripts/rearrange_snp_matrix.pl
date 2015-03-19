@@ -130,7 +130,7 @@ sub branchLengthToSNP
 	my @line = split(/\s/, $input);	
 	
 	my $treeTotalSNP = $line[2];
-	print $treeTotalSNP."\n";
+	
 	my $internalNumber = 1;
 	foreach my $node ( $input_taxa_tree->get_nodes ){
 	  my $nodeBranchLength = $node->branch_length();
@@ -146,7 +146,6 @@ sub branchLengthToSNP
       	#round the number printed to the closest integer value
       	$node->branch_length(round($lengthToSNP));
       }
-      print $node->id() if $node->is_Leaf;
       $internalNumber++ if !$node->is_Leaf;
     }
     close($inputPhy);
@@ -212,6 +211,9 @@ pod2usage(1) unless $tmp_dir && $input_tree && $output_dir && $matrix_input && $
 #check to ensure all required command line variables are present and set default values if applicable:
 die "Error: No temp directory defined." if (not defined $tmp_dir);
 die "Error: Invalid newick file." if (not -e $input_tree);
+die "Error: Invalid matrix.csv file." if (not -e $matrix_input);
+die "Error: Invalid pseudoalign.phy file." if (not -e $input_phy);
+
 $keep_tmp = 0 if (not defined $keep_tmp);
 
 my $job_out = tempdir('rearrange_snp_matrixXXXXXX', CLEANUP => (not $keep_tmp), DIR => $tmp_dir) or die "Could not create temp directory";

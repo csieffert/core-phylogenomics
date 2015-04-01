@@ -34,7 +34,7 @@ sub reRootTree
 	foreach my $node ($input_taxa_tree->get_nodes()){ 
        if($node->id eq $newRoot)
        {
-       	  $input_taxa_tree->reroot_at_midpoint($node, 'ROOT NODE');
+       	  $input_taxa_tree->reroot_at_midpoint($node);
 		  $logger->log("The phylogenetic tree has been successfully re-rooted on strain: ".$node->id()."\n", 0);
 		  return;	
        }
@@ -254,7 +254,7 @@ branchLengthToSNP($tree, $input_phy, $logger) if defined $convert;
  	
 #print the final newick formatted tree to a file that can be opened by any tree viewing program
 open(my $treeout, '>', $output_dir.'/phylogeneticTree.txt') or die "Could not open output file: $!";
-print $treeout $tree->to_newick( -nodelabels => 1, -header => 1, -links => 1 );
+print $treeout $tree->to_newick();
 close($treeout);
 
 =head1 NAME
